@@ -162,10 +162,10 @@ class AudioPlayActivity :
             binding.ivFastForward.invisible()
         }
         binding.ivFastForward.setOnClickListener {
-            AudioPlay.adjustSpeed(this@AudioPlayActivity, 0.1f)
+            AudioPlay.adjustSpeed(this@AudioPlayActivity, 0.5f)
         }
         binding.ivFastRewind.setOnClickListener {
-            AudioPlay.adjustSpeed(this@AudioPlayActivity, -0.1f)
+            AudioPlay.adjustSpeed(this@AudioPlayActivity, -0.5f)
         }
         binding.ivTimer.setOnClickListener {
             timerSliderPopup.showAsDropDown(it, 0, (-100).dpToPx(), Gravity.TOP)
