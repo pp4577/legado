@@ -48,7 +48,6 @@ const search = (
 ) => {
   // webSocket
   const url = `ws://${hostname}:${Number(port) + 1}/searchBook`;
-
   const socket = new WebSocket(url);
 
   socket.onopen = () => {
@@ -99,7 +98,7 @@ const debug = (
   const socket = new WebSocket(url);
 
   socket.onopen = () => {
-    socket.send(`{"tag":"${sourceUrl}", "key":"${searchKey}"}`);
+    socket.send(JSON.stringify({ tag: sourceUrl, key: searchKey }));
   };
   socket.onmessage = ({ data }) => onReceive(data);
 

@@ -35,6 +35,7 @@ declare module '@vue/runtime-core' {
     RouterView: typeof import('vue-router')['RouterView']
     SourceDebug: typeof import('./components/SourceDebug.vue')['default']
     SourceHelp: typeof import('./components/SourceHelp.vue')['default']
+    SourceItem: typeof import('./components/SourceItem.vue')['default']
     SourceJson: typeof import('./components/SourceJson.vue')['default']
     SourceList: typeof import('./components/SourceList.vue')['default']
     SourceTabForm: typeof import('./components/SourceTabForm.vue')['default']
