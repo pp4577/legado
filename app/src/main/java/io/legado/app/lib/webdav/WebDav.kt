@@ -174,12 +174,13 @@ open class WebDav(
         val baseUrl = NetworkUtils.getBaseUrl(urlStr)
         for (element in elements) {
             //依然是优化支持 caddy 自建的 WebDav ，其目录后缀都为“/”, 所以删除“/”的判定，不然无法获取该目录项
-            val href = URLDecoder.decode(element.findNS("href", ns)[0].text(), "UTF-8")
+            val href = element.findNS("href", ns)[0].text().replace("+", "%20")
+            val hrefDecode = URLDecoder.decode(href, "UTF-8")
                 .removeSuffix("/")
-            val fileName = href.substringAfterLast("/")
+            val fileName = hrefDecode.substringAfterLast("/")
             val webDavFile: WebDav
             try {
-                val urlName = href.ifEmpty {
+                val urlName = hrefDecode.ifEmpty {
                     url.file.replace("/", "")
                 }
                 val contentType = element
@@ -199,7 +200,7 @@ open class WebDav(
                                 .toInstant(ZoneOffset.of("+8")).toEpochMilli()
                         }
                 }.getOrNull() ?: 0
-                val fullURL = NetworkUtils.getAbsoluteURL(baseUrl, href)
+                val fullURL = NetworkUtils.getAbsoluteURL(baseUrl, hrefDecode)
                 webDavFile = WebDavFile(
                     fullURL,
                     authorization,
@@ -229,8 +230,22 @@ open class WebDav(
                 addHeader("Depth", "0")
                 val requestBody = EXISTS.toRequestBody("application/xml".toMediaType())
                 method("PROPFIND", requestBody)
-            }.isSuccessful
+            }.use { it.isSuccessful }
         }.getOrDefault(false)
+    }
+
+    /**
+     * 检查用户名密码是否有效
+     */
+    suspend fun check(): Boolean {
+        return kotlin.runCatching {
+            webDavClient.newCallResponse {
+                url(url)
+                addHeader("Depth", "0")
+                val requestBody = EXISTS.toRequestBody("application/xml".toMediaType())
+                method("PROPFIND", requestBody)
+            }.use { it.code != 401 }
+        }.getOrDefault(true)
     }
 
     /**
@@ -245,7 +260,7 @@ open class WebDav(
                 webDavClient.newCallResponse {
                     url(url)
                     method("MKCOL", null)
-                }.let {
+                }.use {
                     checkResult(it)
                 }
             }
@@ -300,7 +315,7 @@ open class WebDav(
                 webDavClient.newCallResponse {
                     url(url)
                     put(fileBody)
-                }.let {
+                }.use {
                     checkResult(it)
                 }
             }
@@ -320,7 +335,7 @@ open class WebDav(
                 webDavClient.newCallResponse {
                     url(url)
                     put(fileBody)
-                }.let {
+                }.use {
                     checkResult(it)
                 }
             }
@@ -340,7 +355,7 @@ open class WebDav(
                 webDavClient.newCallResponse {
                     url(url)
                     put(fileBody)
-                }.let {
+                }.use {
                     checkResult(it)
                 }
             }
@@ -371,7 +386,7 @@ open class WebDav(
             webDavClient.newCallResponse {
                 url(url)
                 method("DELETE", null)
-            }.let {
+            }.use {
                 checkResult(it)
             }
         }.onFailure {
@@ -390,7 +405,7 @@ open class WebDav(
                 val supportBasicAuth = headers.any {
                     it.startsWith("Basic", ignoreCase = true)
                 }
-                if (!supportBasicAuth) {
+                if (headers.isNotEmpty() && !supportBasicAuth) {
                     AppLog.put("服务器不支持BasicAuth认证")
                 }
             }
